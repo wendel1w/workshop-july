@@ -1,0 +1,37 @@
+# ArgoCD Application CRD — dvn-workshop
+# Monitora o repositorio de manifests Kubernetes e aplica via GitOps.
+# Referencia: ADR-006
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dvn-workshop
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: dvn-workshop
+    app.kubernetes.io/part-of: dvn-workshop
+    app.kubernetes.io/managed-by: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Ajustar a URL conforme o repositorio real.
+    repoURL: https://github.com/wendel1w/workshop-july.git
+    targetRevision: main
+    path: dvn-workshop-kubernetes
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
