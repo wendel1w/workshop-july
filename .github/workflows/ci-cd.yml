@@ -45,6 +45,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug OIDC Token
+        run: |
+          echo "=== Requesting OIDC token ==="
+          echo "Request URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "ERROR: ACTIONS_ID_TOKEN_REQUEST_URL is empty. id-token permission may not be set."
+            exit 1
+          fi
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+          echo "=== Token response (first 100 chars) ==="
+          echo "$TOKEN" | head -c 100
+          echo ""
+          echo "=== Decoded claims ==="
+          echo "$TOKEN" | jq -r '.value' | cut -d. -f2 | base64 -d 2>/dev/null | jq '{iss, sub, aud, ref, repository, actor}' || echo "Failed to decode token"
+
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -90,6 +106,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Debug OIDC Token
+        run: |
+          echo "=== Requesting OIDC token ==="
+          echo "Request URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "ERROR: ACTIONS_ID_TOKEN_REQUEST_URL is empty. id-token permission may not be set."
+            exit 1
+          fi
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+          echo "=== Token response (first 100 chars) ==="
+          echo "$TOKEN" | head -c 100
+          echo ""
+          echo "=== Decoded claims ==="
+          echo "$TOKEN" | jq -r '.value' | cut -d. -f2 | base64 -d 2>/dev/null | jq '{iss, sub, aud, ref, repository, actor}' || echo "Failed to decode token"
 
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4

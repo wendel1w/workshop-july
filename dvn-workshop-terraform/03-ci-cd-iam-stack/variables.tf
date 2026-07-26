@@ -47,12 +47,13 @@ variable "tags" {
 variable "github_org" {
   description = "Organizacao ou usuario do GitHub que detém o repositorio de aplicações."
   type        = string
+  default     = "wendel1w"
 }
 
 variable "github_repo" {
   description = "Nome do repositorio GitHub das aplicações (sem a org)."
   type        = string
-  default     = "dvn-workshop-apps"
+  default     = "workshop-july"
 }
 
 variable "github_branch" {
