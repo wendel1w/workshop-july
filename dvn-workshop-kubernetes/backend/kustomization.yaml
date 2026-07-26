@@ -4,12 +4,15 @@ kind: Kustomization
 namespace: default
 
 labels:
-  - pairs:
-      app.kubernetes.io/part-of: dvn-workshop
-      app.kubernetes.io/managed-by: kustomize
-    includeSelectors: false
+- pairs:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/part-of: dvn-workshop
 
 resources:
-  - deployment.yaml
-  - service.yaml
-  - pdb.yaml
+- deployment.yaml
+- service.yaml
+- pdb.yaml
+images:
+- name: 725510651649.dkr.ecr.us-east-1.amazonaws.com/dvn-workshop/backend
+  newName: 725510651649.dkr.ecr.us-east-1.amazonaws.com/dvn-workshop/backend
+  newTag: f7fd4a85b101e1dd7b0f12e45b82a8cabb403f1c
