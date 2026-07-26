@@ -1,0 +1,130 @@
+name: CI/CD — Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 725510651649.dkr.ecr.us-east-1.amazonaws.com
+  MANIFESTS_REPO: wendel1w/workshop-july
+  APPS_BASE: dvn-workshop-julho/dvn-workshop-apps
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'dvn-workshop-julho/dvn-workshop-apps/frontend/**'
+            backend:
+              - 'dvn-workshop-julho/dvn-workshop-apps/backend/**'
+
+  build-frontend:
+    name: Build & Push Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::725510651649:role/github-actions-ci-dvn-workshop
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Frontend Image
+        run: |
+          IMAGE="${{ env.ECR_REGISTRY }}/dvn-workshop/frontend"
+          docker build \
+            -t "${IMAGE}:${{ github.sha }}" \
+            -t "${IMAGE}:latest" \
+            -f ${{ env.APPS_BASE }}/frontend/youtube-live-app/Dockerfile \
+            ${{ env.APPS_BASE }}/frontend/youtube-live-app
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:latest"
+
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update Kubernetes Manifests
+        run: |
+          git clone "https://x-access-token:${{ secrets.PAT_KUBERNETES_REPO }}@github.com/${{ env.MANIFESTS_REPO }}.git" manifests
+          cd manifests/dvn-workshop-kubernetes/frontend
+          kustomize edit set image \
+            "725510651649.dkr.ecr.us-east-1.amazonaws.com/dvn-workshop/frontend=${{ env.ECR_REGISTRY }}/dvn-workshop/frontend:${{ github.sha }}"
+          cd ../..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "ci: update frontend image to ${{ github.sha }}"
+          git pull --rebase origin main
+          git push
+
+  build-backend:
+    name: Build & Push Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::725510651649:role/github-actions-ci-dvn-workshop
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Backend Image
+        run: |
+          IMAGE="${{ env.ECR_REGISTRY }}/dvn-workshop/backend"
+          docker build \
+            -t "${IMAGE}:${{ github.sha }}" \
+            -t "${IMAGE}:latest" \
+            -f ${{ env.APPS_BASE }}/backend/YoutubeLiveApp/Dockerfile \
+            ${{ env.APPS_BASE }}/backend/YoutubeLiveApp
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:latest"
+
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update Kubernetes Manifests
+        run: |
+          git clone "https://x-access-token:${{ secrets.PAT_KUBERNETES_REPO }}@github.com/${{ env.MANIFESTS_REPO }}.git" manifests
+          cd manifests/dvn-workshop-kubernetes/backend
+          kustomize edit set image \
+            "725510651649.dkr.ecr.us-east-1.amazonaws.com/dvn-workshop/backend=${{ env.ECR_REGISTRY }}/dvn-workshop/backend:${{ github.sha }}"
+          cd ../..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "ci: update backend image to ${{ github.sha }}"
+          git pull --rebase origin main
+          git push
