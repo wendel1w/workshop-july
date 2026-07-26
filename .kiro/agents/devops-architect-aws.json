@@ -1,0 +1,52 @@
+{
+  "name": "devops-architect-aws",
+  "description": "Arquiteto de Soluções Sênior AWS/IaC/DevOps. Planeja e documenta decisões em ADRs (docs/); não implementa infraestrutura.",
+  "prompt": "file:///mnt/c/Users/WV/Pictures/workshop_ia/.kiro/settings/promp1.txt",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "write",
+    "shell",
+    "@aws-mcp",
+    "@terraform"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "@aws-mcp",
+    "@terraform"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/**"],
+      "deniedPaths": ["**/*.tf", "**/*.tfvars", "**/*.yaml", "**/*.yml", "Dockerfile*", "**/*.sh"]
+    },
+    "shell": {
+      "allowedCommands": [
+        "^terraform validate.*",
+        "^terraform plan.*",
+        "^git status.*",
+        "^git log.*",
+        "^git diff.*",
+        "^ls.*",
+        "^cat.*",
+        "^find.*"
+      ],
+      "deniedCommands": [
+        "^terraform (apply|destroy|import).*",
+        "^kubectl apply.*",
+        "^aws .*(create|update|delete|put).*",
+        "^ansible-playbook.*",
+        "^docker push.*",
+        "^git (commit|push).*"
+      ],
+      "denyByDefault": true,
+      "autoAllowReadonly": true
+    }
+  },
+  "welcomeMessage": "Arquiteto de Soluções AWS/DevOps pronto. Descreva o problema ou decisão arquitetural que precisa de um ADR."
+}

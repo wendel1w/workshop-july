@@ -1,0 +1,49 @@
+{
+  "name": "devops-engineer",
+  "description": "DevOps Engineer Sênior executor. Implementa ADRs aprovados (docs/) em Terraform/AWS/Docker/K8s/CI-CD, com gate manual antes de apply/destroy.",
+  "prompt": "file:///mnt/c/Users/WV/Pictures/workshop_ia/.kiro/settings/promp2.txt",
+  "tools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "write",
+    "shell",
+    "@aws-mcp",
+    "@terraform"
+  ],
+  "allowedTools": [
+    "read",
+    "grep",
+    "glob",
+    "code",
+    "@aws-mcp",
+    "@terraform"
+  ],
+  "toolsSettings": {
+    "write": {
+      "deniedPaths": ["docs/**"]
+    },
+    "shell": {
+      "allowedCommands": [
+        "^terraform fmt.*",
+        "^terraform validate.*",
+        "^terraform init.*",
+        "^terraform plan.*",
+        "^tflint.*",
+        "^checkov.*",
+        "^tfsec.*",
+        "^aws .*(describe|list|get).*",
+        "^kubectl (get|describe).*",
+        "^dir.*",
+        "^type.*"
+      ],
+      "deniedCommands": [
+        "^git (reset --hard|clean -f|branch -D).*"
+      ],
+      "denyByDefault": false,
+      "autoAllowReadonly": true
+    }
+  },
+  "welcomeMessage": "DevOps Engineer pronto. Informe qual ADR aprovado devo implementar."
+}

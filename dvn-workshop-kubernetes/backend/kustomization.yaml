@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: dvn-workshop
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - pdb.yaml

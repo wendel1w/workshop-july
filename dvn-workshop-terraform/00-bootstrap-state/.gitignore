@@ -1,0 +1,7 @@
+# State local deste stack de bootstrap — NUNCA versionar.
+# Este é o unico stack que mantém state local de propósito (evita dependência circular).
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+tfplan.out
